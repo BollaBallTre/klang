@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1473621C-7502-4B93-978A-8E99D22022E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Klang.Core", "src\Klang.Core\Klang.Core.csproj", "{966B4F06-20B0-4EE2-80A3-4A2A27A1FF15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Klang.Audio", "src\Klang.Audio\Klang.Audio.csproj", "{72FA17FB-A1D2-4222-A1A4-7C98CE42DD05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Klang.App", "src\Klang.App\Klang.App.csproj", "{9982BA89-1CD4-4256-B561-7577245C9B2F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EB2D3A8A-3C99-40BC-BFAA-48D9867A7712}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Klang.Core.Tests", "tests\Klang.Core.Tests\Klang.Core.Tests.csproj", "{97B3099E-0C9D-4032-B66C-05F479166740}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{966B4F06-20B0-4EE2-80A3-4A2A27A1FF15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{966B4F06-20B0-4EE2-80A3-4A2A27A1FF15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{966B4F06-20B0-4EE2-80A3-4A2A27A1FF15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{966B4F06-20B0-4EE2-80A3-4A2A27A1FF15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72FA17FB-A1D2-4222-A1A4-7C98CE42DD05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72FA17FB-A1D2-4222-A1A4-7C98CE42DD05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72FA17FB-A1D2-4222-A1A4-7C98CE42DD05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72FA17FB-A1D2-4222-A1A4-7C98CE42DD05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9982BA89-1CD4-4256-B561-7577245C9B2F}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{9982BA89-1CD4-4256-B561-7577245C9B2F}.Debug|Any CPU.Build.0 = Debug|x64
+		{9982BA89-1CD4-4256-B561-7577245C9B2F}.Release|Any CPU.ActiveCfg = Release|x64
+		{9982BA89-1CD4-4256-B561-7577245C9B2F}.Release|Any CPU.Build.0 = Release|x64
+		{97B3099E-0C9D-4032-B66C-05F479166740}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97B3099E-0C9D-4032-B66C-05F479166740}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97B3099E-0C9D-4032-B66C-05F479166740}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97B3099E-0C9D-4032-B66C-05F479166740}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{966B4F06-20B0-4EE2-80A3-4A2A27A1FF15} = {1473621C-7502-4B93-978A-8E99D22022E2}
+		{72FA17FB-A1D2-4222-A1A4-7C98CE42DD05} = {1473621C-7502-4B93-978A-8E99D22022E2}
+		{9982BA89-1CD4-4256-B561-7577245C9B2F} = {1473621C-7502-4B93-978A-8E99D22022E2}
+		{97B3099E-0C9D-4032-B66C-05F479166740} = {EB2D3A8A-3C99-40BC-BFAA-48D9867A7712}
+	EndGlobalSection
+EndGlobal

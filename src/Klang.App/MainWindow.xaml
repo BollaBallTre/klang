@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Klang.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Klang">
+
+    <Grid x:Name="Root">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Egen tittellinje over Mica -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Padding="16,0,0,0" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <FontIcon Glyph="&#xE9E9;" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="Klang" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+        </Grid>
+
+        <StackPanel Grid.Row="1" Padding="16,0,16,8" Spacing="8">
+            <InfoBar x:Name="SetupBar" IsClosable="False" Severity="Error" IsOpen="False">
+                <InfoBar.ActionButton>
+                    <HyperlinkButton x:Name="SetupLink" Content="Last ned VB-Cable" NavigateUri="https://vb-audio.com/Cable/" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <InfoBar x:Name="RouteBar" IsClosable="True" Severity="Warning" IsOpen="False">
+                <InfoBar.ActionButton>
+                    <Button x:Name="OpenMixerButton" Content="Åpne volumblanderen" Click="OpenMixer_Click" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <InfoBar x:Name="EngineBar" IsClosable="True" Severity="Error" IsOpen="False">
+                <InfoBar.ActionButton>
+                    <Button Content="Prøv igjen" Click="RestartEngine_Click" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="2">
+            <StackPanel Padding="16,0,16,16" Spacing="12">
+
+                <!-- Program, forhåndsinnstilling og av/på -->
+                <Border Style="{StaticResource Card}">
+                    <Grid ColumnSpacing="16" RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Program" Style="{StaticResource FieldLabel}" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="AppCombo" HorizontalAlignment="Stretch" PlaceholderText="Velg et program som spiller lyd"
+                                          AutomationProperties.Name="Program" SelectionChanged="AppCombo_SelectionChanged" />
+                                <Button Grid.Column="1" x:Name="RefreshAppsButton" Click="RefreshApps_Click"
+                                        AutomationProperties.Name="Oppdater programlisten" ToolTipService.ToolTip="Oppdater programlisten">
+                                    <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                                </Button>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                                <Ellipse x:Name="PlayingDot" Width="8" Height="8" VerticalAlignment="Center" />
+                                <TextBlock x:Name="AppStatusText" Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Forhåndsinnstilling" Style="{StaticResource FieldLabel}" />
+                            <ComboBox x:Name="PresetCombo" HorizontalAlignment="Stretch" AutomationProperties.Name="Forhåndsinnstilling"
+                                      SelectionChanged="PresetCombo_SelectionChanged" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                                <Button x:Name="SaveButton" Content="Lagre som…" Click="Save_Click" />
+                                <Button x:Name="DeleteButton" Content="Slett" Click="Delete_Click" IsEnabled="False" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Equalizer" Style="{StaticResource FieldLabel}" />
+                            <ToggleSwitch x:Name="PowerToggle" IsOn="True" OnContent="På" OffContent="Av (hører originalen)"
+                                          AutomationProperties.Name="Equalizer på eller av" Toggled="PowerToggle_Toggled" />
+                            <Button x:Name="FlatButton" Content="Flat (tilbakestill)" Click="Flat_Click" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Frekvenskurve -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="6">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Frekvenskurve" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <Border x:Name="DirtyBadge" Visibility="Collapsed" CornerRadius="10" Padding="8,1"
+                                        Background="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center">
+                                    <TextBlock Text="Endret" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock x:Name="PreampText" HorizontalAlignment="Right" Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                       ToolTipService.ToolTip="Klang senker volumet litt automatisk så lyden ikke forvrenges når du forsterker." />
+                        </Grid>
+                        <Canvas x:Name="CurveCanvas" Height="150" SizeChanged="CurveCanvas_SizeChanged"
+                                AutomationProperties.Name="Frekvenskurve for gjeldende innstilling" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Skyvebrytere -->
+                <Border Style="{StaticResource Card}">
+                    <Grid x:Name="BandGrid" ColumnSpacing="4" />
+                </Border>
+
+                <!-- Bunnlinje -->
+                <Grid ColumnSpacing="16" Padding="4,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock x:Name="RouteText" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="LatencyText" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Høyttaler" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ComboBox x:Name="SpeakerCombo" MinWidth="220" AutomationProperties.Name="Høyttaler"
+                                  SelectionChanged="SpeakerCombo_SelectionChanged" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
