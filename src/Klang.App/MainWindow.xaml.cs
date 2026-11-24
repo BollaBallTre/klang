@@ -239,8 +239,16 @@ public sealed partial class MainWindow : Window
             _routedPids.Clear();
             foreach (var p in _current.ProcessIds) _routedPids.Add(p);
             if (!_settings.RoutedApps.Contains(_current.Key, StringComparer.OrdinalIgnoreCase)) _settings.RoutedApps.Add(_current.Key);
+            // Noen programmer (f.eks. VLC) holder fast på lydenheten til avspillingen startes på nytt.
+            RouteBar.Severity = InfoBarSeverity.Informational;
+            RouteBar.Title = "Hører du ingenting?";
+            RouteBar.Message = $"Stopp avspillingen i {_current.DisplayName} og start den igjen, så tar Klang over lyden.";
+            OpenMixerButton.Visibility = Visibility.Collapsed;
+            RouteBar.IsOpen = true;
             return;
         }
+        RouteBar.Severity = InfoBarSeverity.Warning;
+        OpenMixerButton.Visibility = Visibility.Visible;
         RouteBar.Title = "Gjør ett steg selv";
         RouteBar.Message = $"Klang fikk ikke flyttet lyden fra {_current.DisplayName} automatisk. Åpne volumblanderen, finn {_current.DisplayName} og sett «Utdataenhet» til «CABLE Input».";
         RouteBar.IsOpen = true;
