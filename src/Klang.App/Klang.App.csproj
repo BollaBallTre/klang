@@ -17,9 +17,15 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250602001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4188" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" Version="1.7.20250829.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Klang.Core\Klang.Core.csproj" />
     <ProjectReference Include="..\Klang.Audio\Klang.Audio.csproj" />
   </ItemGroup>
+  <!-- dotnet publish (CLI) leaves out the app's own resource index (Klang.pri),
+       which holds the compiled XAML. Without it the window cannot load. -->
+  <Target Name="CopyAppPriToPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(OutDir)$(AssemblyName).pri" DestinationFolder="$(PublishDir)" Condition="Exists('$(OutDir)$(AssemblyName).pri')" />
+  </Target>
 </Project>
