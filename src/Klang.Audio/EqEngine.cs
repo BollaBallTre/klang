@@ -26,6 +26,17 @@ public sealed class EqEngine : IDisposable
     private double[] _gains = Bands.Flat();
     private bool _enabled = true;
     private bool _stopping;
+    private float _inputPeak;
+    private long _bytesIn;
+
+    /// <summary>Høyeste nivå (0–1) fra VB-Cable siden forrige kall, og antall byte mottatt. Nullstilles ved lesing.</summary>
+    public (float Peak, long Bytes) TakeInputStats()
+    {
+        var r = (_inputPeak, _bytesIn);
+        _inputPeak = 0;
+        _bytesIn = 0;
+        return r;
+    }
 
     /// <summary>Kalles fra en lydtråd når noe går galt (f.eks. høyttaleren ble koblet fra).</summary>
     public event Action<string>? Faulted;
@@ -80,18 +91,20 @@ public sealed class EqEngine : IDisposable
 
             var output = new WasapiOut(speaker, AudioClientShareMode.Shared, useEventSync: true, latency: OutputLatencyMs);
             output.Init(_buffer);
-            output.PlaybackStopped += (_, e) => { if (!_stopping) Faulted?.Invoke(e.Exception?.Message ?? "Avspillingen stoppet."); };
+            output.PlaybackStopped += (_, e) => { Log.Info($"Avspilling stoppet: {e.Exception}"); if (!_stopping) Faulted?.Invoke(e.Exception?.Message ?? "Avspillingen stoppet."); };
             capture.DataAvailable += OnData;
-            capture.RecordingStopped += (_, e) => { if (!_stopping) Faulted?.Invoke(e.Exception?.Message ?? "Opptaket fra VB-Cable stoppet."); };
+            capture.RecordingStopped += (_, e) => { Log.Info($"Opptak stoppet: {e.Exception}"); if (!_stopping) Faulted?.Invoke(e.Exception?.Message ?? "Opptaket fra VB-Cable stoppet."); };
 
             _capture = capture;
             _output = output;
             SampleRate = fmt.SampleRate;
             SpeakerName = speaker.FriendlyName;
 
+            Log.Info($"Motor: fanger fra '{cableOutput.FriendlyName}' ({fmt}, {_kind}), spiller til '{speaker.FriendlyName}' ({floatFormat}).");
             capture.StartRecording();
             output.Play();
             IsRunning = true;
+            Log.Info($"Motor startet. Avspilling: {output.PlaybackState}.");
         }
     }
 
@@ -103,6 +116,10 @@ public sealed class EqEngine : IDisposable
 
         int samples = ToFloat(e.Buffer.AsSpan(0, e.BytesRecorded));
         var span = _scratch.AsSpan(0, samples);
+        float peak = 0;
+        foreach (var x in span) { var a = Math.Abs(x); if (a > peak) peak = a; }
+        if (peak > _inputPeak) _inputPeak = peak;
+        _bytesIn += e.BytesRecorded;
         eq.Process(span);
 
         // Hold køen kort. Klokkene til VB-Cable og høyttaleren går aldri helt likt,

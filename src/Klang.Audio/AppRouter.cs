@@ -45,6 +45,7 @@ public sealed unsafe class AppRouter : IDisposable
             finally { if (cls != IntPtr.Zero) WindowsDeleteString(cls); }
         }
         LastError ??= "Windows tillot ikke å bytte lydenhet per program.";
+        Klang.Core.Log.Info($"AppRouter ikke tilgjengelig: {LastError}");
     }
 
     /// <summary>Sender programmets lyd til enheten med MMDevice-id <paramref name="deviceId"/>.</summary>
@@ -68,6 +69,7 @@ public sealed unsafe class AppRouter : IDisposable
                 int hr1 = set(_factory, (uint)pid, FlowRender, RoleMultimedia, h);
                 int hr2 = set(_factory, (uint)pid, FlowRender, RoleConsole, h);
                 if (hr1 < 0 || hr2 < 0) { ok = false; LastError = $"Feilkode 0x{Math.Min(hr1, hr2):X8}"; }
+                Klang.Core.Log.Info($"Ruting pid {pid} -> {(fullId ?? "standard")}: hr 0x{hr1:X8}/0x{hr2:X8}");
             }
             catch (Exception ex) { ok = false; LastError = ex.Message; }
             finally { if (h != IntPtr.Zero) WindowsDeleteString(h); }

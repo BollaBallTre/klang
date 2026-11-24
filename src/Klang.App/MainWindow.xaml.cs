@@ -32,6 +32,7 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         _settings = _store.Load();
+        Log.Info("---- Klang starter ----");
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -74,8 +75,10 @@ public sealed partial class MainWindow : Window
             SetupLink.NavigateUri = new Uri("https://vb-audio.com/Cable/");
             SetupBar.Severity = InfoBarSeverity.Error;
             SetupBar.IsOpen = true;
+            Log.Info("VB-Cable ikke funnet.");
             return;
         }
+        Log.Info($"VB-Cable funnet: '{_cableInput.FriendlyName}' / '{cableOutput.FriendlyName}'. Ruting støttet: {_router.IsSupported}");
         if (AudioDevices.DefaultOutputIsCable())
         {
             SetupBar.Title = "All lyd går til VB-Cable";
@@ -117,6 +120,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
+            Log.Info($"Motor feilet ved start: {ex}");
             ShowEngineError(ex.Message);
         }
         UpdateFooter();
@@ -188,6 +192,11 @@ public sealed partial class MainWindow : Window
 
         UpdateAppStatus();
         UpdateFooter();
+
+        var (peak, bytes) = _engine.TakeInputStats();
+        bool signal = peak > 0.0005f;
+        LevelText.Text = !_engine.IsRunning ? "" : bytes == 0 ? "Ingen data fra VB-Cable" : signal ? "Lyd kommer inn fra VB-Cable" : "Stille fra VB-Cable";
+        Log.Info($"Status: motor={_engine.IsRunning} byte inn={bytes} topp={peak:0.0000} program={_current?.Key} rutet={_routedKey} pids=[{string.Join(",", _routedPids)}]");
     }
 
     private void AppCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -212,6 +221,7 @@ public sealed partial class MainWindow : Window
 
         _current = app;
         _settings.LastApp = app.Key;
+        Log.Info($"Valgte program {app.Key} ({app.DisplayName}), pids [{string.Join(",", app.ProcessIds)}]");
         RouteCurrent();
         LoadAppState();
         UpdateAppStatus();

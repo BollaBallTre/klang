@@ -128,6 +128,8 @@
                         <TextBlock x:Name="RouteText" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" />
                         <TextBlock x:Name="LatencyText" Style="{StaticResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="LevelText" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <TextBlock Text="Høyttaler" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center"
