@@ -6,7 +6,7 @@ En grafisk equalizer for Windows 11 som virker på ett program om gangen.
 - Lagre egne innstillinger med navn og hente dem frem igjen.
 - Husker innstillingen for hvert program.
 - Av/på for å sammenligne med originallyden.
-- Automatisk volumvern så lyden ikke forvrenges når du forsterker.
+- Volumvern (skyvebryter fra −10 til −3 dB) så lyden ikke forvrenges når du forsterker. Klang varsler hvis det er for lite.
 
 ## Slik virker det
 

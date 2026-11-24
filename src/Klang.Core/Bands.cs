@@ -16,6 +16,19 @@ public static class Bands
 
     public static double[] Flat() => new double[Count];
 
+    /// <summary>Volumvern: hvor mye hele signalet senkes, valgt med en skyvebryter.</summary>
+    public const double PreampMinDb = -10.0;
+    public const double PreampMaxDb = -3.0;
+    public const double DefaultPreampDb = -6.0;
+
+    /// <summary>Klemmer volumvernet til −10…−3 dB og runder til nærmeste halve dB.</summary>
+    public static double ClampPreamp(double db)
+    {
+        if (double.IsNaN(db) || db == 0) return DefaultPreampDb;
+        var c = Math.Clamp(db, PreampMinDb, PreampMaxDb);
+        return Math.Round(c / GainStepDb) * GainStepDb;
+    }
+
     /// <summary>Klemmer til lovlig område og runder til nærmeste halve dB.</summary>
     public static double Clamp(double gainDb)
     {

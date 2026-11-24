@@ -25,6 +25,7 @@ public sealed class EqEngine : IDisposable
     private byte[] _bytes = Array.Empty<byte>();
     private double[] _gains = Bands.Flat();
     private bool _enabled = true;
+    private double _preampDb = Bands.DefaultPreampDb;
     private bool _stopping;
     private float _inputPeak;
     private long _bytesIn;
@@ -61,6 +62,12 @@ public sealed class EqEngine : IDisposable
         _eq?.SetGains(_gains);
     }
 
+    public void SetPreamp(double preampDb)
+    {
+        _preampDb = Bands.ClampPreamp(preampDb);
+        _eq?.SetPreamp(_preampDb);
+    }
+
     public void SetEnabled(bool enabled)
     {
         _enabled = enabled;
@@ -81,6 +88,7 @@ public sealed class EqEngine : IDisposable
             _eq = new Equalizer(fmt.SampleRate, fmt.Channels);
             _eq.SetGains(_gains);
             _eq.SetEnabled(_enabled);
+            _eq.SetPreamp(_preampDb);
 
             _buffer = new BufferedWaveProvider(floatFormat)
             {

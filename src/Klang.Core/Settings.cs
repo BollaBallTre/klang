@@ -30,6 +30,8 @@ public sealed class AppEqState
     /// <summary>Bryterverdiene, som kan være endret etter at innstillingen ble valgt.</summary>
     public double[] Gains { get; set; } = Bands.Flat();
     public bool Enabled { get; set; } = true;
+    /// <summary>Volumvern i dB, −10 til −3.</summary>
+    public double PreampDb { get; set; } = Bands.DefaultPreampDb;
 }
 
 public enum SaveNameProblem { None, Empty, TooLong, ReservedName }
@@ -133,6 +135,7 @@ public sealed class SettingsStore
             if (!string.IsNullOrWhiteSpace(k) && v is not null)
             {
                 v.Gains = Bands.Normalize(v.Gains);
+                v.PreampDb = Bands.ClampPreamp(v.PreampDb);
                 v.PresetName ??= "";
                 apps[k] = v;
             }

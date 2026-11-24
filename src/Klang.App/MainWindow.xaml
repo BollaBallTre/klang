@@ -18,7 +18,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <FontIcon Glyph="&#xE9E9;" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+            <Image Source="ms-appx:///Equalizer.ico" Width="16" Height="16" VerticalAlignment="Center" />
             <TextBlock Grid.Column="1" Text="Klang" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
         </Grid>
 
@@ -104,10 +104,19 @@
                                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
                                 </Border>
                             </StackPanel>
-                            <TextBlock x:Name="PreampText" HorizontalAlignment="Right" Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                                       ToolTipService.ToolTip="Klang senker volumet litt automatisk så lyden ikke forvrenges når du forsterker." />
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        ToolTipService.ToolTip="Senker volumet på alt som går gjennom Klang, så lyden ikke forvrenges når du forsterker.">
+                                <TextBlock Text="Volumvern" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <Slider x:Name="PreampSlider" Width="160" Minimum="-10" Maximum="-3" StepFrequency="0.5"
+                                        SmallChange="0.5" LargeChange="1" Value="-6" VerticalAlignment="Center"
+                                        AutomationProperties.Name="Volumvern i desibel" ValueChanged="PreampSlider_ValueChanged" />
+                                <TextBlock x:Name="PreampValue" Width="48" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+                            </StackPanel>
                         </Grid>
+                        <TextBlock x:Name="ClipWarning" Visibility="Collapsed" TextWrapping="Wrap"
+                                   Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                   Text="Lyden kan forvrenges. Dra volumvernet lenger mot −10 dB eller senk noen av bryterne." />
                         <Canvas x:Name="CurveCanvas" Height="150" SizeChanged="CurveCanvas_SizeChanged"
                                 AutomationProperties.Name="Frekvenskurve for gjeldende innstilling" />
                     </StackPanel>

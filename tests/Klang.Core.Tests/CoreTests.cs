@@ -44,13 +44,14 @@ public class EqualizerTests
     }
 
     [Fact]
-    public void Flat_LeavesSignalUntouched()
+    public void Flat_OnlyLowersVolumeByPreamp()
     {
         var eq = new Equalizer(48000, 2);
         var input = Sine(440, 4800, 2);
         var output = input.ToArray();
         eq.Process(output);
-        Assert.Equal(input, output);
+        float factor = (float)Math.Pow(10, Bands.DefaultPreampDb / 20);
+        for (int i = 0; i < input.Length; i++) Assert.Equal(input[i] * factor, output[i], 5);
     }
 
     [Fact]
@@ -92,13 +93,43 @@ public class EqualizerTests
     }
 
     [Fact]
-    public void Processing_DoesNotClipFullScaleSine()
+    public void Preamp_LowersLevelByChosenAmount()
     {
         var eq = new Equalizer(48000, 1);
-        eq.SetGains(Presets.FindBuiltIn("Kraftig bass")!.Gains);
-        var s = Sine(50, 48000, 1, amp: 1f);
+        eq.SetGains(new double[] { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 }); // ett bånd aktivt så filteret kjører
+        eq.SetPreamp(-10);
+        var s = Sine(100, 48000, 1, amp: 0.5f);
+        var input = s.ToArray();
         eq.Process(s);
-        Assert.True(s.Skip(24000).Max(Math.Abs) <= 1.05f);
+        double diff = RmsDb(s.AsSpan(24000)) - RmsDb(input.AsSpan(24000));
+        Assert.InRange(diff, -10.2, -9.8);
+    }
+
+    [Fact]
+    public void Preamp_IsAppliedEvenWhenAllBandsAreFlat()
+    {
+        var eq = new Equalizer(48000, 1);
+        eq.SetPreamp(-6);
+        var s = Sine(440, 4800, 1);
+        var input = s.ToArray();
+        eq.Process(s);
+        Assert.InRange(s[100] / input[100], 0.49f, 0.51f);
+    }
+
+    [Theory]
+    [InlineData(-12, -10)]
+    [InlineData(-1, -3)]
+    [InlineData(-4.3, -4.5)]
+    [InlineData(double.NaN, -6)]
+    [InlineData(0, -6)]
+    public void ClampPreamp_StaysWithinRange(double input, double expected) => Assert.Equal(expected, Bands.ClampPreamp(input));
+
+    [Fact]
+    public void MayClip_DetectsWhenPreampIsTooSmall()
+    {
+        var bass = Presets.FindBuiltIn("Kraftig bass")!.Gains;
+        Assert.True(FrequencyResponse.MayClip(bass, -3));
+        Assert.False(FrequencyResponse.MayClip(Bands.Flat(), -3));
     }
 }
 
@@ -143,7 +174,7 @@ public class SettingsTests : IDisposable
         var store = new SettingsStore(FilePath);
         var s = new KlangSettings();
         SettingsStore.Upsert(s, "  Kveldsfilm ", new double[] { 3, 2, 1, 0, 0, 0, 0, 1, 2, 3 });
-        s.Apps["Spotify"] = new AppEqState { PresetName = "Kveldsfilm", Gains = new double[] { 3, 2, 1, 0, 0, 0, 0, 1, 2, 3 }, Enabled = false };
+        s.Apps["Spotify"] = new AppEqState { PresetName = "Kveldsfilm", Gains = new double[] { 3, 2, 1, 0, 0, 0, 0, 1, 2, 3 }, Enabled = false, PreampDb = -8.5 };
         s.LastApp = "Spotify";
         s.RoutedApps.Add("Spotify");
         store.Save(s);
@@ -152,6 +183,7 @@ public class SettingsTests : IDisposable
         Assert.Equal("Kveldsfilm", Assert.Single(loaded.CustomPresets).Name);
         Assert.Equal(3, loaded.CustomPresets[0].Gains[0]);
         Assert.False(loaded.Apps["spotify"].Enabled);
+        Assert.Equal(-8.5, loaded.Apps["spotify"].PreampDb);
         Assert.Equal("Spotify", loaded.LastApp);
         Assert.Equal(new[] { "Spotify" }, loaded.RoutedApps);
     }

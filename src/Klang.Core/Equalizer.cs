@@ -16,6 +16,7 @@ public sealed class Equalizer
     private readonly double[,] _z2;
     private double[] _gains = Bands.Flat();
     private bool _enabled = true;
+    private double _preampDb = Bands.DefaultPreampDb;
 
     public Equalizer(double sampleRate, int channels)
     {
@@ -30,13 +31,20 @@ public sealed class Equalizer
 
     public int Channels => _channels;
     public double SampleRate => _sampleRate;
-    public double PreampCutDb { get; private set; }
+    /// <summary>Volumvernet i dB (negativt tall, −10 til −3).</summary>
+    public double PreampDb => _preampDb;
     public bool Enabled => _enabled;
     public IReadOnlyList<double> Gains => _gains;
 
     public void SetGains(IReadOnlyList<double> gains)
     {
         _gains = Bands.Normalize(gains);
+        _state = Build();
+    }
+
+    public void SetPreamp(double preampDb)
+    {
+        _preampDb = Bands.ClampPreamp(preampDb);
         _state = Build();
     }
 
@@ -51,8 +59,7 @@ public sealed class Equalizer
         var coeffs = new BiquadCoefficients[Bands.Count];
         for (int i = 0; i < Bands.Count; i++)
             coeffs[i] = BiquadCoefficients.Peaking(_sampleRate, Bands.Frequencies[i], _gains[i], Bands.Q);
-        PreampCutDb = FrequencyResponse.AutoPreampCut(_gains);
-        float preamp = (float)Math.Pow(10, -PreampCutDb / 20);
+        float preamp = (float)Math.Pow(10, _preampDb / 20);
         return new State(coeffs, preamp, _enabled);
     }
 

@@ -38,6 +38,8 @@ public sealed partial class MainWindow : Window
         SetTitleBar(AppTitleBar);
         SystemBackdrop = new MicaBackdrop();
         AppWindow.Resize(new Windows.Graphics.SizeInt32(980, 820));
+        try { AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Equalizer.ico")); }
+        catch (Exception ex) { Log.Info($"Fant ikke ikonet: {ex.Message}"); }
 
         _saveTimer = DispatcherQueue.CreateTimer();
         _saveTimer.Interval = TimeSpan.FromMilliseconds(600);
@@ -275,7 +277,7 @@ public sealed partial class MainWindow : Window
         var key = _current?.Key ?? "";
         if (!_settings.Apps.TryGetValue(key, out var s))
         {
-            s = new AppEqState { PresetName = Presets.FlatName, Gains = Bands.Flat(), Enabled = true };
+            s = new AppEqState { PresetName = Presets.FlatName, Gains = Bands.Flat(), Enabled = true, PreampDb = Bands.DefaultPreampDb };
             if (_current is not null) _settings.Apps[key] = s;
         }
         return s;
@@ -286,8 +288,10 @@ public sealed partial class MainWindow : Window
         var s = CurrentState();
         _engine.SetGains(s.Gains);
         _engine.SetEnabled(s.Enabled);
+        _engine.SetPreamp(s.PreampDb);
         _suppress = true;
         PowerToggle.IsOn = s.Enabled;
+        PreampSlider.Value = s.PreampDb;
         SelectPresetInCombo(s.PresetName);
         for (int i = 0; i < Bands.Count; i++) _sliders[i].Value = s.Gains[i];
         _suppress = false;
@@ -355,6 +359,17 @@ public sealed partial class MainWindow : Window
         var s = CurrentState();
         s.Enabled = PowerToggle.IsOn;
         _engine.SetEnabled(s.Enabled);
+        Refresh();
+        ScheduleSave();
+    }
+
+    private void PreampSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        if (PreampValue is not null) PreampValue.Text = FormatDb(e.NewValue);
+        if (_suppress || _current is null || _sliders[0] is null) return;
+        var s = CurrentState();
+        s.PreampDb = Bands.ClampPreamp(e.NewValue);
+        _engine.SetPreamp(s.PreampDb);
         Refresh();
         ScheduleSave();
     }
@@ -493,11 +508,12 @@ public sealed partial class MainWindow : Window
         var baseGains = SettingsStore.GainsFor(_settings, s.PresetName);
         DirtyBadge.Visibility = baseGains is not null && !baseGains.SequenceEqual(s.Gains) ? Visibility.Visible : Visibility.Collapsed;
         DeleteButton.IsEnabled = _settings.CustomPresets.Any(c => string.Equals(c.Name, s.PresetName, StringComparison.OrdinalIgnoreCase));
-        var cut = FrequencyResponse.AutoPreampCut(s.Gains);
-        PreampText.Text = s.Enabled && cut > 0 ? $"Volumvern −{cut:0.#} dB" : "";
+        PreampValue.Text = FormatDb(s.PreampDb);
+        ClipWarning.Visibility = s.Enabled && FrequencyResponse.MayClip(s.Gains, s.PreampDb) ? Visibility.Visible : Visibility.Collapsed;
         bool hasApp = _current is not null;
         PresetCombo.IsEnabled = SaveButton.IsEnabled = FlatButton.IsEnabled = PowerToggle.IsEnabled = hasApp;
         foreach (var sl in _sliders) sl.IsEnabled = hasApp;
+        PreampSlider.IsEnabled = hasApp;
         DrawCurve();
     }
 

@@ -42,4 +42,7 @@ public static class FrequencyResponse
         if (peak <= 0) return 0;
         return Math.Ceiling(peak * 2) / 2;
     }
+
+    /// <summary>True når den høyeste toppen pluss volumvernet går over 0 dB, så lyden kan forvrenges.</summary>
+    public static bool MayClip(IReadOnlyList<double> gains, double preampDb) => Peak(gains) + preampDb > 0.05;
 }
