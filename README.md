@@ -33,6 +33,16 @@ dotnet publish src/Klang.App/Klang.App.csproj -c Release -r win-x64 -p:Platform=
 
 Kjør `publish/Klang/Klang.exe`. Innstillinger lagres i `%AppData%\Klang\settings.json`.
 
+## Android
+
+Mappen `android/` har Klang for Android (Kotlin og Jetpack Compose, Android 9 eller nyere).
+Samme EQ, de samme ti innstillingene, egne lagrede innstillinger, frekvenskurve og volumvern.
+
+- **Last ned:** https://github.com/BollaBallTre/klang/releases/latest/download/Klang.apk
+- Lyden går gjennom Androids egen lydeffekt (DynamicsProcessing). VB-Cable trengs ikke.
+- «All lyd» virker med alle apper. Musikkapper som VLC sier fra når de spiller, og kan da få sin egen EQ.
+- GitHub Actions bygger APK-en ved hver endring i `android/` (`.github/workflows/android.yml`).
+
 ## Prosjekt
 
 | Mappe | Innhold |
@@ -41,6 +51,8 @@ Kjør `publish/Klang/Klang.exe`. Innstillinger lagres i `%AppData%\Klang\setting
 | `src/Klang.Audio` | Lyd inn og ut (NAudio/WASAPI), liste over programmer, bytte av utgang per program. |
 | `src/Klang.App` | Vinduet (WinUI 3). |
 | `tests/Klang.Core.Tests` | Tester for kjernen. |
+| `android/core` | Samme kjerne skrevet i Kotlin, med tester. |
+| `android/app` | Android-appen. |
 
 ## Kjente begrensninger
 

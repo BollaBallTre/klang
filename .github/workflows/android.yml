@@ -1,0 +1,57 @@
+name: Bygg Klang for Android
+
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['android/**', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Test kjernen
+        run: ./gradlew :core:test --no-daemon
+
+      - name: Bygg APK
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Gi APK-en et enkelt navn
+        run: cp app/build/outputs/apk/release/app-release.apk Klang.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Klang-android-apk
+          path: android/Klang.apk
+
+      # Legger APK-en ut som en nedlasting, så den kan hentes rett fra telefonen:
+      # https://github.com/BollaBallTre/klang/releases/latest/download/Klang.apk
+      - name: Publiser nedlasting
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-v0.1.${{ github.run_number }}
+          name: Klang for Android 0.1.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: android/Klang.apk
+          body: |
+            Last ned **Klang.apk** nedenfor på Android-telefonen og åpne filen for å installere.
+            Krever Android 9 eller nyere.
