@@ -61,4 +61,5 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("androidx.car.app:app:1.4.0") // for å se om Android Auto er tilkoblet
 }

@@ -1,6 +1,8 @@
 package io.github.bollaballtre.klang
 
 import android.content.Context
+import android.util.Log
+import androidx.car.app.connection.CarConnection
 import klang.core.AppEqState
 import klang.core.KlangSettings
 import klang.core.SettingsStore
@@ -23,6 +25,8 @@ import java.io.File
  * Alt appen vet: innstillingene (lagres i settings.json), hvilke apper som spiller lyd nå
  * (lydøkter meldt fra musikkappene), og om Klang er i gang. Holder lydeffektene oppdatert.
  */
+private data class Inputs(val settings: KlangSettings, val sessions: Map<Int, String>, val running: Boolean, val androidAuto: Boolean)
+
 @OptIn(FlowPreview::class)
 class KlangState(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -35,6 +39,10 @@ class KlangState(context: Context) {
     private val _sessions = MutableStateFlow<Map<Int, String>>(emptyMap())
     val sessions: StateFlow<Map<Int, String>> = _sessions.asStateFlow()
 
+    /** True når telefonen er koblet til bilen med Android Auto. */
+    private val _androidAuto = MutableStateFlow(false)
+    val androidAuto: StateFlow<Boolean> = _androidAuto.asStateFlow()
+
     private val running = MutableStateFlow(true)
     private val controlChanged = MutableStateFlow(0)
 
@@ -43,8 +51,17 @@ class KlangState(context: Context) {
 
     init {
         scope.launch {
-            combine(_settings, _sessions, running, controlChanged) { s, ss, r, _ -> Triple(s, ss, r) }
-                .collect { (s, ss, r) -> effects.apply(s, ss, r) }
+            combine(_settings, _sessions, running, _androidAuto, controlChanged) { s, ss, r, car, _ -> Inputs(s, ss, r, car) }
+                .collect { effects.apply(it.settings, it.sessions, it.running, it.androidAuto) }
+        }
+        // Android Auto sender lyden til bilen utenom vanlig avspilling. Da må EQ-en legges på hver app.
+        try {
+            CarConnection(context).type.observeForever { type ->
+                _androidAuto.value = type == CarConnection.CONNECTION_TYPE_PROJECTION
+                Log.i("Klang", "Bilforbindelse: $type")
+            }
+        } catch (e: Exception) {
+            Log.w("Klang", "Fant ikke ut om Android Auto er tilkoblet", e)
         }
         scope.launch {
             _settings.drop(1).debounce(400).collect { s ->

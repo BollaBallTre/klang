@@ -84,6 +84,7 @@ fun KlangScreen(state: KlangState) {
     val settings by state.settings.collectAsStateWithLifecycle()
     val sessions by state.sessions.collectAsStateWithLifecycle()
     val status by state.status.collectAsStateWithLifecycle()
+    val androidAuto by state.androidAuto.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val cache = remember { AppInfoCache(context) }
     val choices = cache.choices(settings, sessions)
@@ -119,7 +120,7 @@ fun KlangScreen(state: KlangState) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             AppPicker(choices, selected) { state.select(it.key) }
-            StatusLine(selected, cur, status)
+            StatusLine(selected, cur, status, androidAuto, sessions.isNotEmpty())
             PresetSection(
                 settings = settings,
                 cur = cur,
@@ -223,7 +224,7 @@ private fun AppPicker(choices: List<AppChoice>, selected: AppChoice, onSelect: (
 }
 
 @Composable
-private fun StatusLine(app: AppChoice, cur: AppEqState, status: EffectStatus) {
+private fun StatusLine(app: AppChoice, cur: AppEqState, status: EffectStatus, androidAuto: Boolean, anyAppPlaying: Boolean) {
     val name = app.label
     val (text, ok) = when {
         !cur.enabled -> "EQ er av for ${if (app.isAllAudio) "all lyd" else name}. Lyden spilles uendret." to null
@@ -231,6 +232,10 @@ private fun StatusLine(app: AppChoice, cur: AppEqState, status: EffectStatus) {
         status == EffectStatus.NoControl -> "En annen lydapp (f.eks. Dolby eller en annen EQ) styrer lyden nå. Slå den av for å bruke Klang." to false
         status == EffectStatus.Failed && app.isAllAudio -> "Telefonen tillot ikke EQ på all lyd. Velg en musikkapp i listen i stedet." to false
         status == EffectStatus.Failed -> "Klarte ikke å koble til lyden fra $name. Prøv «All lyd» i stedet." to false
+        app.isAllAudio && androidAuto && anyAppPlaying ->
+            "Android Auto: EQ virker på musikkapper som VLC. Apper som Spotify og YouTube Music slipper ikke EQ-apper til i bilen." to true
+        app.isAllAudio && androidAuto ->
+            "Android Auto: «All lyd» virker ikke i bilen. Spill fra en app som VLC, så legger Klang EQ på den." to false
         app.isAllAudio -> "EQ virker på all lyd fra telefonen." to true
         status == EffectStatus.Waiting -> "Venter på lyd fra $name. Start avspillingen, eller stopp og start den igjen." to null
         else -> "EQ virker på $name nå." to true
@@ -400,7 +405,10 @@ private fun HelpSection() {
         if (open) {
             Spacer(Modifier.size(4.dp))
             Text(
-                "• «All lyd» virker med alle apper, også Spotify, YouTube og Netflix.\n\n" +
+                "• «All lyd» virker med alle apper, også Spotify, YouTube og Netflix, på høyttaleren, " +
+                    "hodetelefoner og Bluetooth.\n\n" +
+                    "• I Android Auto sender telefonen lyden en annen vei, utenom «All lyd». Der virker EQ-en bare " +
+                    "på musikkapper som sier fra til EQ-apper, som VLC.\n\n" +
                     "• Musikkapper som VLC sier fra til Klang når de spiller. De dukker opp i listen, " +
                     "og da kan du gi akkurat den appen sin egen EQ. Start Klang først, og start så avspillingen.\n\n" +
                     "• Klang husker innstillingen for hver app.\n\n" +

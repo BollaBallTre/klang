@@ -35,11 +35,13 @@ class EffectManager(private val onControlChanged: () -> Unit) {
     private val _status = MutableStateFlow(EffectStatus.Off)
     val status: StateFlow<EffectStatus> = _status.asStateFlow()
 
-    fun apply(settings: KlangSettings, sessions: Map<Int, String>, running: Boolean) {
+    fun apply(settings: KlangSettings, sessions: Map<Int, String>, running: Boolean, androidAuto: Boolean) {
         val target = settings.selected
         val state = settings.stateFor(target)
         val wanted: Set<Int> = when {
             !running -> emptySet()
+            // Med Android Auto går lyden utenom økt 0, så «All lyd» legges også på hver app som har sagt fra.
+            target == KlangSettings.ALL_AUDIO && androidAuto -> sessions.keys + GLOBAL_SESSION
             target == KlangSettings.ALL_AUDIO -> setOf(GLOBAL_SESSION)
             else -> sessions.filterValues { it == target }.keys
         }
@@ -58,6 +60,7 @@ class EffectManager(private val onControlChanged: () -> Unit) {
             !running -> EffectStatus.Off
             wanted.isEmpty() -> EffectStatus.Waiting
             wanted.all { it in failed } -> EffectStatus.Failed
+            target == KlangSettings.ALL_AUDIO && androidAuto && wanted.none { it != GLOBAL_SESSION && it !in failed } -> EffectStatus.Waiting
             wanted.any { it in noControl } -> EffectStatus.NoControl
             else -> EffectStatus.Active
         }
